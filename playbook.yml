@@ -26,19 +26,35 @@
   become: true
 
   tasks:
-   - name: Ensure tomcat9 package is present
+   - name: Ensure docker package is present
      apt:
-      name: tomcat9
+      name: docker.io
       state: present
       update_cache: true
 
-   - name: Ensure tomcat9 is running
+   - name: Ensure docker is running
      service:
-      name: tomcat9.service
+      name: docker.service
       state: started
+
+   - name: Install docker-compose from official github repo
+       get_url:
+       url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+       dest: /usr/local/bin/docker-compose
+       mode: 755
+
+   - name: Ensure docker-compose.yml is present
+     copy:
+     src: docker-compose.yml
+     dest: /root/tomcat-app/
 
    - name: Transfer file from deploy to web
      synchronize:
       src: /tmp/hello/target/hello-1.0.war 
-      dest: /var/lib/tomcat9/webapps/
+      dest: /root/tomcat/webapps/
      delegate_to: deploy
+
+   - name: Start docker-compose app
+     shell:
+      chdir: /root/tomcat-app/
+          cmd: docker-compose up -d
