@@ -21,7 +21,7 @@
    - name: Build app
      shell: mvn package chdir="/tmp/hello"
 
-- name: Install and deploy artifact
+- name: Install tomcat and publish app on the web
   hosts: web
   become: true
 
