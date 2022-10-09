@@ -1,0 +1,44 @@
+---
+- name: Install and deploy artifact
+  hosts: deploy
+  become: true
+
+  tasks:
+   - name: Install a list of packages
+     apt:
+      pkg:
+      - default-jdk
+      - maven
+      - git
+      update_cache: yes
+      state: present
+   - name: Just get information about the repository whether or not it has already been cloned locally
+     ansible.builtin.git:
+      repo: 'https://github.com/boxfuse/boxfuse-sample-java-war-hello.git'
+      dest: /tmp/hello
+      clone: yes
+      update: no
+   - name: Build app
+     shell: mvn package chdir="/tmp/hello"
+
+- name: Install and deploy artifact
+  hosts: web
+  become: true
+
+  tasks:
+   - name: Ensure tomcat9 package is present
+     apt:
+      name: tomcat9
+      state: present
+      update_cache: true
+
+   - name: Ensure tomcat9 is running
+     service:
+      name: tomcat9.service
+      state: started
+
+   - name: Transfer file from deploy to web
+     synchronize:
+      src: /tmp/hello/target/hello-1.0.war 
+      dest: /var/lib/tomcat9/webapps/
+     delegate_to: deploy
