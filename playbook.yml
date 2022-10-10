@@ -13,7 +13,7 @@
       update_cache: yes
       state: present
    - name: Just get information about the repository whether or not it has already been cloned locally
-     ansible.builtin.git:
+     git:
       repo: 'https://github.com/boxfuse/boxfuse-sample-java-war-hello.git'
       dest: /tmp/hello
       clone: yes
@@ -38,15 +38,17 @@
       state: started
 
    - name: Install docker-compose from official github repo
-       get_url:
+     get_url:
        url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
        dest: /usr/local/bin/docker-compose
        mode: 755
 
-   - name: Ensure docker-compose.yml is present
-     copy:
-     src: docker-compose.yml
-     dest: /root/tomcat-app/
+   - name: Example clone of a single branch
+     git:
+      repo: https://github.com/ansible/ansible-examples.git
+      dest: /root/tomcat
+      single_branch: yes
+      version: compose
 
    - name: Transfer file from deploy to web
      synchronize:
@@ -57,4 +59,4 @@
    - name: Start docker-compose app
      shell:
       chdir: /root/tomcat-app/
-          cmd: docker-compose up -d
+      cmd: docker-compose up -d
