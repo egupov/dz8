@@ -45,7 +45,7 @@
 
    - name: Example clone of a single branch
      git:
-      repo: https://github.com/ansible/ansible-examples.git
+      repo: https://github.com/egupov/dz8.git
       dest: /root/tomcat
       single_branch: yes
       version: compose
