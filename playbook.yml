@@ -21,8 +21,8 @@
    - name: Build app
      shell: mvn package chdir="/tmp/hello"
 
-- name: Install tomcat and publish app on the web
-  hosts: web
+- name: Install docker for all && login dockerhub
+  hosts: all
   become: true
 
   tasks:
@@ -36,26 +36,55 @@
      service:
       name: docker.service
       state: started
+  
+   - name: log into docker hub registry
+     docker_login:
+       email: "your-email@address"
+       username: "a-dockerhub-username"
+       password: "a-dockerhub-password"
 
-   - name: Install docker-compose from official github repo
-     get_url:
-       url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
-       dest: /usr/local/bin/docker-compose
-       mode: 755
+- name: Build image and push of a dockerhub
+  hosts: deploy
+  become: true
 
+  tasks:
    - name: Example clone of a single branch
      git:
       repo: https://github.com/egupov/dz8.git
       dest: /root/tomcat
-      version: compose
+      version: dockerhub
 
    - name: Transfer file from deploy to web
      synchronize:
       src: /tmp/hello/target/hello-1.0.war 
       dest: /root/tomcat/
-     delegate_to: deploy
+     delegate_to: localhost
 
-   - name: Start docker-compose app
-     shell:
-      chdir: /root/tomcat/
-      cmd: docker-compose up -d
+   - name: build container image
+     docker_image:
+      name: tomcat:v1.0
+      build:
+        path: /root/tomcat/Dockerfile
+        source: build
+      state: present
+
+   - name: Tag and push to docker hub
+     docker_image:
+      name: tomcat:v1.0
+      repository: egupoff/dz8
+      push: true
+      source: local
+
+- name: pull dockerhub image
+  hosts: web
+  become: true
+
+  tasks:    
+   - name: ensure a container is running
+     docker_container:
+       name: tomcat
+       state: started
+       image: "egupoff/dz8:master-latest"
+       pull: true
+       ports:
+         - "80:8080"
