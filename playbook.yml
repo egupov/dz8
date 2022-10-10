@@ -47,7 +47,6 @@
      git:
       repo: https://github.com/egupov/dz8.git
       dest: /root/tomcat
-      single_branch: yes
       version: compose
 
    - name: Transfer file from deploy to web
