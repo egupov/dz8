@@ -51,7 +51,7 @@
    - name: Transfer file from deploy to web
      synchronize:
       src: /tmp/hello/target/hello-1.0.war 
-      dest: /root/tomcat/webapps/
+      dest: /root/tomcat/
      delegate_to: deploy
 
    - name: Start docker-compose app
