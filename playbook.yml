@@ -1,4 +1,3 @@
----
 - name: Install and deploy artifact
   hosts: deploy
   become: true
@@ -28,9 +27,14 @@
   tasks:
    - name: Ensure docker package is present
      apt:
-      name: docker.io
+      pkg:
+      - docker.io
+      - python-pip
       state: present
-      update_cache: true
+      update_cache: yes
+
+   - name: add docker-py
+     shell: pip install docker-py
 
    - name: Ensure docker is running
      service:
@@ -39,9 +43,9 @@
   
    - name: log into docker hub registry
      docker_login:
-       email: "your-email@address"
-       username: "a-dockerhub-username"
-       password: "a-dockerhub-password"
+       email: "mail"
+       username: "user"
+       password: "pass"
 
 - name: Build image and push of a dockerhub
   hosts: deploy
@@ -55,18 +59,21 @@
       version: dockerhub
 
    - name: Transfer file from deploy to web
-     synchronize:
+     copy:
       src: /tmp/hello/target/hello-1.0.war 
-      dest: /root/tomcat/
-     delegate_to: localhost
+      dest: /root/tomcat/hello-1.0.war
+      remote_src: True
 
+???????????????????????????????????????????????????
    - name: build container image
      docker_image:
-      name: tomcat:v1.0
-      build:
-        path: /root/tomcat/Dockerfile
-        source: build
+      build: 
+        dockerfile:
+          source: ./tomcat/Dockerfile
+        path: ./tomcat
+      source: build
       state: present
+      name: tomcat:v1.0
 
    - name: Tag and push to docker hub
      docker_image:
